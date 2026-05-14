@@ -1128,7 +1128,7 @@ function VentasSocio({ data }: { data: SheetData }) {
     return mesElegido ? toNum(row[mesElegido.col]) : 0
   }
 
-  const totalMes   = vista === 'acumulado' ? toNum(totalRow[14]) : mesElegido ? toNum(totalRow[mesElegido.col]) : 0
+  const totalMes   = getMonto(totalRow)
   const chartData  = tipoRows.map(r => ({
     tipo: (r[0] ?? '').substring(0, 20),
     Monto: getMonto(r),
