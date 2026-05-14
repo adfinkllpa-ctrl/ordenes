@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   const { username, password } = await req.json()
 
   const found = USERS.find(
-    u => u.username === username.toUpperCase() && u.password === password
+    u => u.username === username.toUpperCase() && u.password === password.toUpperCase()
   )
 
   if (found) {
