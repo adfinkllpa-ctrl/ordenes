@@ -1029,7 +1029,8 @@ function DeudasCard({ data }: { data: SheetData }) {
   const kllpaRows = data.rows.slice(0, 3).filter(r => r[0]?.trim())
   const oxxoRow   = data.rows[3] ?? []
 
-  const totalKllpa = kllpaRows.reduce((s, r) => s + toNum(r[1]), 0)
+  // Total KLLPA = suma de D4 + D5 únicamente (col índice 3)
+  const totalKllpa = toNum(data.rows[0]?.[3]) + toNum(data.rows[1]?.[3])
   const totalOxxo  = toNum(oxxoRow[2])
 
   return (
@@ -1066,8 +1067,8 @@ function DeudasCard({ data }: { data: SheetData }) {
               {kllpaRows.map((row, i) => (
                 <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
                   {row.map((cell, j) => (
-                    <td key={j} className={`py-2.5 ${j === 0 ? 'text-gray-700' : 'text-right font-medium text-red-600'}`}>
-                      {j === 0 ? cell : toNum(cell) > 0 ? `S/.${toNum(cell).toLocaleString('es-PE', { minimumFractionDigits: 2 })}` : cell}
+                    <td key={j} className={`py-2.5 ${j === 0 ? 'text-gray-700' : j === 3 ? 'text-right font-medium text-red-600' : 'text-right text-gray-400'}`}>
+                      {j === 3 && toNum(cell) > 0 ? `S/.${toNum(cell).toLocaleString('es-PE', { minimumFractionDigits: 2 })}` : j === 0 ? cell : cell}
                     </td>
                   ))}
                 </tr>

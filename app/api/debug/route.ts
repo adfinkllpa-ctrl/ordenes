@@ -2,10 +2,9 @@ import { NextResponse } from 'next/server'
 import { fetchSheet } from '@/lib/google-sheets'
 
 export async function GET() {
-  const sheet = await fetchSheet(5) // Presupuesto - rango extendido para ver sección ANUAL
+  const sheet = await fetchSheet(7) // Deudas
   return NextResponse.json({
     headers: sheet.headers.map((h, i) => ({ col: i, value: h })),
-    totalRows: sheet.rows.length,
-    totalsRow: sheet.rows.find(r => r[0]?.toUpperCase().includes('TOTAL'))
+    rows: sheet.rows.map((r, i) => ({ rowIdx: i, data: r }))
   })
 }
