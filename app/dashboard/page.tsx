@@ -1447,7 +1447,6 @@ export default function DashboardPage() {
               const ventasSocioData = sheets.find(s => s.config?.label === 'Ventas Socio')
               return (
                 <div className="space-y-5">
-                  {ventasSheets.length > 0 && <VentasUnidadNegocio sheets={ventasSheets} />}
                   {ventasSocioData && !ventasSocioData.error
                     ? <VentasSocio data={ventasSocioData} />
                     : <div className="bg-white rounded-2xl border border-red-200 p-5 flex items-center gap-2 text-red-500"><AlertCircle size={16} /> Error al cargar datos de proyección</div>
