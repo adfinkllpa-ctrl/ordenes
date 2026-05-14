@@ -1104,6 +1104,129 @@ function DeudasCard({ data }: { data: SheetData }) {
   )
 }
 
+// ─── VENTAS SOCIO ──────────────────────────────────────────────────────────
+// Sheet: Proyección 3 tipos — A96:O103
+// headers = fila 96 (meses), rows[0..5] = filas 97-102 (tipos), rows[6] = fila 103 (totales)
+// Columna O = índice 14 = total por tipo
+
+function VentasSocio({ data }: { data: SheetData }) {
+  const meses     = data.headers.map((h, i) => ({ nombre: h?.trim(), col: i })).filter(h => h.nombre && h.nombre !== '' && h.col > 0 && h.col < 14)
+  const tipoRows  = data.rows.slice(0, 6).filter(r => r[0]?.trim())
+  const totalRow  = data.rows[6] ?? []
+
+  const mesDefault = meses.find(m => m.nombre?.toLowerCase() === MESES_ES[MES_ACTUAL]) ?? meses[meses.length - 1]
+  const [mesElegido, setMesElegido] = useState(mesDefault)
+  const [vista, setVista] = useState<'mensual' | 'acumulado'>('mensual')
+
+  const getMonto = (row: string[]) => {
+    if (vista === 'acumulado') return toNum(row[14])
+    return mesElegido ? toNum(row[mesElegido.col]) : 0
+  }
+
+  const totalMes   = vista === 'acumulado' ? toNum(totalRow[14]) : mesElegido ? toNum(totalRow[mesElegido.col]) : 0
+  const chartData  = tipoRows.map(r => ({
+    tipo: (r[0] ?? '').substring(0, 20),
+    Monto: getMonto(r),
+  })).filter(d => d.Monto > 0)
+
+  const label = vista === 'acumulado' ? 'Acumulado anual' : `${mesElegido?.nombre ?? ''}`
+
+  return (
+    <div className="space-y-5">
+      {/* Card principal */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
+          <div className="p-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-700">
+            <TrendingUp size={18} />
+          </div>
+          <div>
+            <h2 className="font-bold text-gray-800 text-base">Proyección de Ventas</h2>
+            <p className="text-xs text-gray-400">Por tipo de venta — {label}</p>
+          </div>
+          {/* Selectores */}
+          <div className="ml-auto flex gap-2">
+            <select
+              value={mesElegido?.col ?? ''}
+              onChange={e => { const f = meses.find(m => m.col === Number(e.target.value)); if (f) { setMesElegido(f); setVista('mensual') } }}
+              className="border-2 border-blue-300 rounded-xl px-3 py-1.5 text-sm font-semibold text-blue-700 bg-blue-50 capitalize focus:outline-none cursor-pointer"
+            >
+              {meses.map(m => <option key={m.col} value={m.col} className="capitalize">{m.nombre}</option>)}
+            </select>
+            <select
+              value={vista}
+              onChange={e => setVista(e.target.value as 'mensual' | 'acumulado')}
+              className="border-2 border-indigo-300 rounded-xl px-3 py-1.5 text-sm font-semibold text-indigo-700 bg-indigo-50 focus:outline-none cursor-pointer"
+            >
+              <option value="mensual">Mensual</option>
+              <option value="acumulado">Acumulado</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Total destacado */}
+        <div className="px-6 pt-5 pb-3">
+          <p className="text-xs text-gray-500 mb-1">Total ventas — {label}</p>
+          <p className="text-4xl font-bold text-blue-600">
+            S/.{totalMes.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+
+        {/* Tabla de tipos */}
+        <div className="px-6 pb-4">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className="text-left py-2 text-xs text-gray-400 font-semibold">Tipo de Venta</th>
+                <th className="text-right py-2 text-xs text-gray-400 font-semibold">Monto</th>
+                <th className="text-right py-2 text-xs text-gray-400 font-semibold">% del total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tipoRows.map((row, i) => {
+                const monto = getMonto(row)
+                const pct   = totalMes > 0 ? ((monto / totalMes) * 100).toFixed(1) : '0'
+                return (
+                  <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                    <td className="py-2.5 text-gray-700">{row[0]}</td>
+                    <td className="py-2.5 text-right font-medium text-gray-800">
+                      S/.{monto.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-2.5 text-right text-gray-400 text-xs">{pct}%</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="bg-blue-50">
+                <td className="py-2.5 font-bold text-blue-700">TOTAL</td>
+                <td className="py-2.5 text-right font-bold text-blue-700">
+                  S/.{totalMes.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                </td>
+                <td className="py-2.5 text-right text-blue-400 text-xs">100%</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* Gráfica */}
+        <div className="px-6 pb-6">
+          <div className="h-52">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 16, left: 130, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis type="number" tick={{ fontSize: 9 }} tickFormatter={v => `S/.${(v/1000).toFixed(0)}k`} />
+                <YAxis type="category" dataKey="tipo" tick={{ fontSize: 9 }} width={130} />
+                <Tooltip formatter={(v: number) => `S/.${v.toLocaleString('es-PE')}`} />
+                <Bar dataKey="Monto" fill="#4361ee" radius={[0,3,3,0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── TARJETA GENÉRICA ──────────────────────────────────────────────────────
 const CARD_META = [
   { icon: Scale,    color: 'bg-blue-50 border-blue-200 text-blue-700' },
@@ -1177,7 +1300,9 @@ export default function DashboardPage() {
       if (meRes.ok) {
         const me = await meRes.json()
         setUsername(me.username ?? '')
-        setAllowedTabs(me.tabs ?? ['ventas','presupuesto','pagos','deudas'])
+        const tabs = me.tabs ?? ['ventas','presupuesto','pagos','deudas']
+        setAllowedTabs(tabs)
+        if (tabs.length > 0) setTabActiva(tabs[0] as 'ventas' | 'ventas_socio' | 'presupuesto' | 'pagos' | 'deudas')
       }
     } catch (err) { console.error(err) }
     finally { setLoading(false) }
@@ -1202,14 +1327,15 @@ export default function DashboardPage() {
   const deudas           = sheets.find(s => s.config?.label === 'Deudas')
 
   const ALL_TABS = [
-    { id: 'ventas',      label: 'Ventas',      icon: TrendingUp },
-    { id: 'presupuesto', label: 'Presupuesto', icon: BarChart2  },
-    { id: 'pagos',       label: 'Pagos',       icon: DollarSign },
-    { id: 'deudas',      label: 'Deudas',      icon: Scale      },
+    { id: 'ventas',        label: 'Ventas',      icon: TrendingUp },
+    { id: 'ventas_socio',  label: 'Ventas',      icon: TrendingUp },
+    { id: 'presupuesto',   label: 'Presupuesto', icon: BarChart2  },
+    { id: 'pagos',         label: 'Pagos',       icon: DollarSign },
+    { id: 'deudas',        label: 'Deudas',      icon: Scale      },
   ] as const
 
   const TABS = ALL_TABS.filter(t => allowedTabs.includes(t.id))
-  const [tabActiva, setTabActiva] = useState<'ventas' | 'presupuesto' | 'pagos' | 'deudas'>('ventas')
+  const [tabActiva, setTabActiva] = useState<'ventas' | 'ventas_socio' | 'presupuesto' | 'pagos' | 'deudas'>('ventas')
 
   return (
     <div className="min-h-screen" style={{
@@ -1281,8 +1407,16 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
+            {/* Sin pestañas asignadas */}
+            {allowedTabs.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-64 gap-3">
+                <p className="text-blue-200 text-lg font-semibold">Bienvenido, {username}</p>
+                <p className="text-blue-300/60 text-sm">Tu panel está siendo configurado. Pronto verás tu información aquí.</p>
+              </div>
+            )}
+
             {/* ── PESTAÑA VENTAS ── */}
-            {tabActiva === 'ventas' && (
+            {tabActiva === 'ventas' && allowedTabs.includes('ventas') && (
               <div className="space-y-5">
                 {flujoEfectivo && !flujoEfectivo.error
                   ? <FlujoEfectivoHero data={flujoEfectivo} />
@@ -1297,7 +1431,7 @@ export default function DashboardPage() {
             )}
 
             {/* ── PESTAÑA PRESUPUESTO ── */}
-            {tabActiva === 'presupuesto' && (
+            {tabActiva === 'presupuesto' && allowedTabs.includes('presupuesto') && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {presupuesto && !presupuesto.error && (
                   <React.Fragment>
@@ -1308,8 +1442,16 @@ export default function DashboardPage() {
               </div>
             )}
 
+            {/* ── PESTAÑA VENTAS SOCIO ── */}
+            {tabActiva === 'ventas_socio' && allowedTabs.includes('ventas_socio') && (() => {
+              const ventasSocioData = sheets.find(s => s.config?.label === 'Ventas Socio')
+              return ventasSocioData && !ventasSocioData.error
+                ? <VentasSocio data={ventasSocioData} />
+                : <div className="bg-white rounded-2xl border border-red-200 p-5 flex items-center gap-2 text-red-500"><AlertCircle size={16} /> Error al cargar datos</div>
+            })()}
+
             {/* ── PESTAÑA DEUDAS ── */}
-            {tabActiva === 'deudas' && (
+            {tabActiva === 'deudas' && allowedTabs.includes('deudas') && (
               <div className="space-y-5">
                 {deudas && !deudas.error
                   ? <DeudasCard data={deudas} />
@@ -1321,7 +1463,7 @@ export default function DashboardPage() {
             )}
 
             {/* ── PESTAÑA PAGOS ── */}
-            {tabActiva === 'pagos' && (
+            {tabActiva === 'pagos' && allowedTabs.includes('pagos') && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {flujoCaja        && !flujoCaja.error        && <PagosDelMes        data={flujoCaja} />}
                 {pagosProgramados && !pagosProgramados.error && <PagosProgramados   data={pagosProgramados} />}

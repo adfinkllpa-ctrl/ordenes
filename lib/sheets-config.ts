@@ -84,4 +84,11 @@ export const SHEETS_CONFIG: SheetConfig[] = [
     category: 'resultados',
     dataRange: 'A2:N3',
   },
+  {
+    id: '1XVj3yhU4jpcgB7cGokmnNZarm3iw0LsUrD0V9yaJAbc',
+    tabName: 'Proyección 3 tipos',
+    label: 'Ventas Socio',
+    category: 'resultados',
+    dataRange: 'A96:O103',
+  },
 ]
