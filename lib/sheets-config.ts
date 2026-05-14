@@ -89,6 +89,6 @@ export const SHEETS_CONFIG: SheetConfig[] = [
     tabName: 'Proyección 3 tipos',
     label: 'Ventas Socio',
     category: 'resultados',
-    dataRange: 'A96:O103',
+    dataRange: 'B96:O103',
   },
 ]

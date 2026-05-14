@@ -1110,7 +1110,8 @@ function DeudasCard({ data }: { data: SheetData }) {
 // Columna O = índice 14 = total por tipo
 
 function VentasSocio({ data }: { data: SheetData }) {
-  const meses     = data.headers.map((h, i) => ({ nombre: h?.trim(), col: i })).filter(h => h.nombre && h.nombre !== '' && h.col > 0 && h.col < 14)
+  // Rango B96:O103 → col 0=B(ene), col 12=N(último mes), col 13=O(total anual)
+  const meses     = data.headers.map((h, i) => ({ nombre: h?.trim(), col: i })).filter(h => h.nombre && h.nombre !== '' && h.col < 13)
   const tipoRows  = data.rows.slice(0, 6).filter(r => r[0]?.trim())
   const totalRow  = data.rows[6] ?? []
 
@@ -1119,7 +1120,7 @@ function VentasSocio({ data }: { data: SheetData }) {
   const [vista, setVista] = useState<'mensual' | 'acumulado'>('mensual')
 
   const getMonto = (row: string[]) => {
-    if (vista === 'acumulado') return toNum(row[14])
+    if (vista === 'acumulado') return toNum(row[13]) // col O = índice 13
     return mesElegido ? toNum(row[mesElegido.col]) : 0
   }
 
