@@ -4,8 +4,8 @@ import { createSession } from '@/lib/session'
 const ALL_TABS = ['ventas', 'presupuesto', 'pagos', 'deudas']
 
 const USERS = [
-  { username: 'HECTOR',  password: 'BEJARANO', role: 'socio',   tabs: ALL_TABS },
-  { username: 'MAGDA',   password: 'PACHECO',  role: 'socio',   tabs: ALL_TABS },
+  { username: 'HECTOR',  password: 'BEJARANO', role: 'socio',   tabs: [] },
+  { username: 'MAGDA',   password: 'PACHECO',  role: 'socio',   tabs: [] },
   { username: 'GERENTE', password: 'GENERAL',  role: 'gerente', tabs: ALL_TABS },
 ]
 
