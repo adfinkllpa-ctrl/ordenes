@@ -1120,7 +1120,11 @@ function VentasSocio({ data }: { data: SheetData }) {
   const [vista, setVista] = useState<'mensual' | 'acumulado'>('mensual')
 
   const getMonto = (row: string[]) => {
-    if (vista === 'acumulado') return toNum(row[13]) // col O = índice 13
+    if (vista === 'acumulado') {
+      return meses
+        .filter(m => m.col <= (mesElegido?.col ?? 0))
+        .reduce((s, m) => s + toNum(row[m.col]), 0)
+    }
     return mesElegido ? toNum(row[mesElegido.col]) : 0
   }
 
