@@ -1445,9 +1445,15 @@ export default function DashboardPage() {
             {/* ── PESTAÑA VENTAS SOCIO ── */}
             {tabActiva === 'ventas_socio' && allowedTabs.includes('ventas_socio') && (() => {
               const ventasSocioData = sheets.find(s => s.config?.label === 'Ventas Socio')
-              return ventasSocioData && !ventasSocioData.error
-                ? <VentasSocio data={ventasSocioData} />
-                : <div className="bg-white rounded-2xl border border-red-200 p-5 flex items-center gap-2 text-red-500"><AlertCircle size={16} /> Error al cargar datos</div>
+              return (
+                <div className="space-y-5">
+                  {ventasSheets.length > 0 && <VentasUnidadNegocio sheets={ventasSheets} />}
+                  {ventasSocioData && !ventasSocioData.error
+                    ? <VentasSocio data={ventasSocioData} />
+                    : <div className="bg-white rounded-2xl border border-red-200 p-5 flex items-center gap-2 text-red-500"><AlertCircle size={16} /> Error al cargar datos de proyección</div>
+                  }
+                </div>
+              )
             })()}
 
             {/* ── PESTAÑA DEUDAS ── */}
