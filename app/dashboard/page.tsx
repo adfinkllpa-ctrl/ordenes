@@ -1158,17 +1158,27 @@ function SheetCard({ sheet, index }: { sheet: SheetData; index: number }) {
 // ─── PÁGINA PRINCIPAL ──────────────────────────────────────────────────────
 export default function DashboardPage() {
   const router = useRouter()
-  const [sheets, setSheets] = useState<SheetData[]>([])
-  const [loading, setLoading] = useState(true)
+  const [sheets, setSheets]       = useState<SheetData[]>([])
+  const [loading, setLoading]     = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  const [username, setUsername]   = useState('')
+  const [allowedTabs, setAllowedTabs] = useState<string[]>(['ventas','presupuesto','pagos','deudas'])
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch('/api/sheets')
-      if (res.status === 401) { router.push('/login'); return }
-      const data = await res.json()
+      const [sheetsRes, meRes] = await Promise.all([
+        fetch('/api/sheets'),
+        fetch('/api/me'),
+      ])
+      if (sheetsRes.status === 401) { router.push('/login'); return }
+      const data = await sheetsRes.json()
       setSheets(Array.isArray(data) ? data : [])
       setLastUpdate(new Date())
+      if (meRes.ok) {
+        const me = await meRes.json()
+        setUsername(me.username ?? '')
+        setAllowedTabs(me.tabs ?? ['ventas','presupuesto','pagos','deudas'])
+      }
     } catch (err) { console.error(err) }
     finally { setLoading(false) }
   }, [router])
@@ -1191,13 +1201,14 @@ export default function DashboardPage() {
   const presupuesto      = sheets.find(s => s.config?.label === 'Presupuesto')
   const deudas           = sheets.find(s => s.config?.label === 'Deudas')
 
-  const TABS = [
+  const ALL_TABS = [
     { id: 'ventas',      label: 'Ventas',      icon: TrendingUp },
     { id: 'presupuesto', label: 'Presupuesto', icon: BarChart2  },
     { id: 'pagos',       label: 'Pagos',       icon: DollarSign },
     { id: 'deudas',      label: 'Deudas',      icon: Scale      },
   ] as const
 
+  const TABS = ALL_TABS.filter(t => allowedTabs.includes(t.id))
   const [tabActiva, setTabActiva] = useState<'ventas' | 'presupuesto' | 'pagos' | 'deudas'>('ventas')
 
   return (
@@ -1225,6 +1236,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-base font-bold text-white">Dashboard Financiero — KLLPA PERU</h1>
+            {username && <p className="text-xs text-blue-300 mt-0.5">Bienvenido, {username}</p>}
             {lastUpdate && (
               <p className="text-xs text-blue-300">
                 Actualizado: {lastUpdate.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}
