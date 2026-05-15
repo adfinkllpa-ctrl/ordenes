@@ -413,11 +413,11 @@ function EbitdaChart({ data }: { data: SheetData }) {
         <div className="p-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-700">
           <TrendingUp size={18} />
         </div>
-        <div>
+        <div className="flex-1">
           <h2 className="font-bold text-gray-800 text-base">EBITDA</h2>
           <p className="text-xs text-gray-400">Margen = Utilidad Operativa / Ventas Netas</p>
         </div>
-        <div className="ml-auto">
+        <div className="flex-1 flex justify-center">
           <select
             value={mesElegido?.col ?? ''}
             onChange={e => {
@@ -429,6 +429,7 @@ function EbitdaChart({ data }: { data: SheetData }) {
             {mesesDisp.map(m => <option key={m.col} value={m.col}>{m.nombre}</option>)}
           </select>
         </div>
+        <div className="flex-1" />
       </div>
 
       {/* KPIs del mes seleccionado */}
