@@ -385,20 +385,27 @@ function EbitdaChart({ data }: { data: SheetData }) {
   const ebitdaRow = findRow('UTILIDAD OPERATIVA')
   const ventasRow = findRow('Ventas Netas')
 
-  // Cols 1-12 = meses B-M
-  const chartData = Array.from({ length: 12 }, (_, i) => {
-    const col    = i + 1
-    const ebitda = toNum(ebitdaRow[col])
-    const ventas = toNum(ventasRow[col])
-    const margen = ventas !== 0 ? parseFloat(((ebitda / ventas) * 100).toFixed(1)) : 0
-    return { mes: MESES_LABEL[i], EBITDA: ebitda, Margen: margen }
-  }).filter(d => d.EBITDA !== 0 || d.Margen !== 0)
+  // Meses con datos (cols 1-12, filtramos los que tienen ventas > 0 o ebitda != 0)
+  const mesesDisp = Array.from({ length: 12 }, (_, i) => ({ nombre: MESES_LABEL[i], col: i + 1 }))
+    .filter(m => toNum(ventasRow[m.col]) !== 0 || toNum(ebitdaRow[m.col]) !== 0)
 
-  // KPIs del mes actual
-  const colMes     = MES_ACTUAL + 1
-  const ebitdaMes  = toNum(ebitdaRow[colMes])
-  const ventasMes  = toNum(ventasRow[colMes])
-  const margenMes  = ventasMes > 0 ? ((ebitdaMes / ventasMes) * 100).toFixed(1) : '0'
+  const mesDefault = mesesDisp.find(m => m.col === MES_ACTUAL + 1) ?? mesesDisp[mesesDisp.length - 1]
+  const [mesElegido, setMesElegido] = useState(mesDefault)
+
+  const col       = mesElegido?.col ?? MES_ACTUAL + 1
+  const ebitdaMes = toNum(ebitdaRow[col])
+  const ventasMes = toNum(ventasRow[col])
+  const margenMes = ventasMes !== 0 ? ((ebitdaMes / ventasMes) * 100).toFixed(1) : '0'
+
+  // Gráfica: todos los meses con datos
+  const chartData = mesesDisp.map(m => ({
+    mes: m.nombre,
+    EBITDA: toNum(ebitdaRow[m.col]),
+    Ventas: toNum(ventasRow[m.col]),
+    Margen: toNum(ventasRow[m.col]) !== 0
+      ? parseFloat(((toNum(ebitdaRow[m.col]) / toNum(ventasRow[m.col])) * 100).toFixed(1))
+      : 0,
+  }))
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden col-span-full">
@@ -408,28 +415,38 @@ function EbitdaChart({ data }: { data: SheetData }) {
         </div>
         <div>
           <h2 className="font-bold text-gray-800 text-base">EBITDA</h2>
-          <p className="text-xs text-gray-400">Evolución mensual · margen = EBITDA / Ventas — {MESES_LABEL[MES_ACTUAL]}</p>
+          <p className="text-xs text-gray-400">Margen = Utilidad Operativa / Ventas Netas</p>
+        </div>
+        <div className="ml-auto">
+          <select
+            value={mesElegido?.col ?? ''}
+            onChange={e => {
+              const found = mesesDisp.find(m => m.col === Number(e.target.value))
+              if (found) setMesElegido(found)
+            }}
+            className="border-2 border-purple-300 rounded-xl px-4 py-2 text-sm font-semibold text-purple-700 bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer"
+          >
+            {mesesDisp.map(m => <option key={m.col} value={m.col}>{m.nombre}</option>)}
+          </select>
         </div>
       </div>
 
-      {/* KPIs del mes */}
+      {/* KPIs del mes seleccionado */}
       <div className="grid grid-cols-3 gap-3 px-6 pt-5 pb-3">
         <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
-          <p className="text-xs text-purple-600">EBITDA — {MESES_LABEL[MES_ACTUAL]}</p>
+          <p className="text-xs text-purple-600">EBITDA — {mesElegido?.nombre}</p>
           <p className="text-xl font-bold text-purple-800 mt-1">
             S/.{ebitdaMes.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
           </p>
         </div>
         <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-          <p className="text-xs text-blue-600">Ventas — {MESES_LABEL[MES_ACTUAL]}</p>
+          <p className="text-xs text-blue-600">Ventas Netas — {mesElegido?.nombre}</p>
           <p className="text-xl font-bold text-blue-800 mt-1">
             S/.{ventasMes.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
           </p>
         </div>
         <div className={`rounded-xl p-4 border ${parseFloat(margenMes) >= 0 ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
-          <p className={`text-xs ${parseFloat(margenMes) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            Margen EBITDA
-          </p>
+          <p className={`text-xs ${parseFloat(margenMes) >= 0 ? 'text-green-600' : 'text-red-600'}`}>Margen EBITDA</p>
           <p className={`text-xl font-bold mt-1 ${parseFloat(margenMes) >= 0 ? 'text-green-800' : 'text-red-800'}`}>
             {margenMes}%
           </p>
@@ -449,6 +466,7 @@ function EbitdaChart({ data }: { data: SheetData }) {
               <Tooltip formatter={(v: number, name: string) => name === 'Margen' ? `${v}%` : `S/.${v.toLocaleString('es-PE')}`} />
               <Legend />
               <Line yAxisId="left"  type="monotone" dataKey="EBITDA" stroke="#7c3aed" strokeWidth={3} dot={{ r: 4 }} />
+              <Line yAxisId="left"  type="monotone" dataKey="Ventas" stroke="#4361ee" strokeWidth={2} dot={false} strokeDasharray="4 4" />
               <Line yAxisId="right" type="monotone" dataKey="Margen" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} strokeDasharray="5 3" />
             </LineChart>
           </ResponsiveContainer>
