@@ -1542,6 +1542,7 @@ export default function DashboardPage() {
                     ? <VentasSocio data={ventasSocioData} />
                     : <div className="bg-white rounded-2xl border border-red-200 p-5 flex items-center gap-2 text-red-500"><AlertCircle size={16} /> Error al cargar datos de proyección</div>
                   }
+                  {estadoResultados && !estadoResultados.error && <EbitdaChart data={estadoResultados} />}
                 </div>
               )
             })()}
