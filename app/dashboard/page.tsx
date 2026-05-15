@@ -382,8 +382,8 @@ function BalanceGeneralTrim({ data }: { data: SheetData }) {
 
 function EbitdaChart({ data }: { data: SheetData }) {
   const findRow = (k: string) => data.rows.find(r => r[0]?.toUpperCase().includes(k.toUpperCase())) ?? []
-  const ebitdaRow = findRow('EBITDA')
-  const ventasRow = findRow('Ventas brutas')
+  const ebitdaRow = findRow('UTILIDAD OPERATIVA')
+  const ventasRow = findRow('Ventas Netas')
 
   // Cols 1-12 = meses B-M
   const chartData = Array.from({ length: 12 }, (_, i) => {
