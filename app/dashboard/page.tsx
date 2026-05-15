@@ -1152,7 +1152,7 @@ function VentasSocio({ data }: { data: SheetData }) {
           <div className="ml-auto flex gap-2">
             <select
               value={mesElegido?.col ?? ''}
-              onChange={e => { const f = meses.find(m => m.col === Number(e.target.value)); if (f) { setMesElegido(f); setVista('mensual') } }}
+              onChange={e => { const f = meses.find(m => m.col === Number(e.target.value)); if (f) setMesElegido(f) }}
               className="border-2 border-blue-300 rounded-xl px-3 py-1.5 text-sm font-semibold text-blue-700 bg-blue-50 capitalize focus:outline-none cursor-pointer"
             >
               {meses.map(m => <option key={m.col} value={m.col} className="capitalize">{m.nombre}</option>)}
