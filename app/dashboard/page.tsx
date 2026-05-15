@@ -1345,40 +1345,78 @@ function CobranzaCard({ data }: { data: SheetData }) {
   const mesesRows = data.rows.slice(0, 12).filter(r => r[0]?.trim() && toNum(r[1]) > 0)
   const totalRow  = data.rows.find(r => r[0]?.toUpperCase().includes('TOTAL')) ?? data.rows[12] ?? []
 
-  const totalVentas    = toNum(totalRow[1])
-  const totalPagado    = toNum(totalRow[2])
-  const totalPorCobrar = toNum(totalRow[3])
-  const totalPorFact   = toNum(totalRow[4])
+  const mesDefault = mesesRows.find((_, i) => i === Math.min(MES_ACTUAL, mesesRows.length - 1)) ?? mesesRows[mesesRows.length - 1]
+  const [mesElegido, setMesElegido] = useState<string | null>(null)
+
+  const filaActiva = mesElegido ? mesesRows.find(r => r[0] === mesElegido) ?? totalRow : totalRow
+  const esTotal    = !mesElegido
+
+  const totalVentas    = toNum(filaActiva[1])
+  const totalPagado    = toNum(filaActiva[2])
+  const totalPorCobrar = toNum(filaActiva[3])
+  const totalPorFact   = toNum(filaActiva[4])
   const pctCobrado     = totalVentas > 0 ? ((totalPagado / totalVentas) * 100).toFixed(1) : '0'
 
   const chartData = mesesRows.map(r => ({
     mes: (r[0] ?? '').slice(0, 3),
-    Ventas:      toNum(r[1]),
-    Pagado:      toNum(r[2]),
-    'Por Cobrar': toNum(r[3]),
-    'Por Facturar': toNum(r[4]),
+    Ventas:        toNum(r[1]),
+    Pagado:        toNum(r[2]),
+    'Por Cobrar':  toNum(r[3]),
+    'Por Facturar':toNum(r[4]),
   }))
+
+  const labelPeriodo = esTotal ? 'Total acumulado' : (mesElegido ?? '')
 
   return (
     <div className="space-y-5">
+      {/* Segmentador de meses */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-gray-400 font-medium mr-1">Mes:</span>
+          <button
+            onClick={() => setMesElegido(null)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              esTotal ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Total
+          </button>
+          {mesesRows.map(r => {
+            const mes = r[0] ?? ''
+            const activo = mesElegido === mes
+            return (
+              <button
+                key={mes}
+                onClick={() => setMesElegido(mes)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors capitalize ${
+                  activo ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {mes.slice(0, 3).charAt(0) + mes.slice(1, 3).toLowerCase()}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-          <p className="text-xs text-gray-500 font-medium">Total Ventas</p>
-          <p className="text-2xl font-bold text-gray-800 mt-1">S/.{(totalVentas/1000).toFixed(0)}k</p>
+          <p className="text-xs text-gray-500 font-medium">Ventas — {labelPeriodo}</p>
+          <p className="text-2xl font-bold text-gray-800 mt-1">S/.{totalVentas.toLocaleString('es-PE',{minimumFractionDigits:0})}</p>
         </div>
         <div className="bg-white rounded-xl border border-emerald-200 shadow-sm p-5">
-          <p className="text-xs text-emerald-600 font-medium">Pagado</p>
-          <p className="text-2xl font-bold text-emerald-700 mt-1">S/.{(totalPagado/1000).toFixed(0)}k</p>
+          <p className="text-xs text-emerald-600 font-medium">Pagado — {labelPeriodo}</p>
+          <p className="text-2xl font-bold text-emerald-700 mt-1">S/.{totalPagado.toLocaleString('es-PE',{minimumFractionDigits:0})}</p>
           <p className="text-xs text-emerald-500 mt-1">{pctCobrado}% cobrado</p>
         </div>
         <div className="bg-white rounded-xl border border-amber-200 shadow-sm p-5">
-          <p className="text-xs text-amber-600 font-medium">Por Cobrar</p>
-          <p className="text-2xl font-bold text-amber-700 mt-1">S/.{(totalPorCobrar/1000).toFixed(0)}k</p>
+          <p className="text-xs text-amber-600 font-medium">Por Cobrar — {labelPeriodo}</p>
+          <p className="text-2xl font-bold text-amber-700 mt-1">S/.{totalPorCobrar.toLocaleString('es-PE',{minimumFractionDigits:0})}</p>
         </div>
         <div className="bg-white rounded-xl border border-blue-200 shadow-sm p-5">
-          <p className="text-xs text-blue-600 font-medium">Por Facturar</p>
-          <p className="text-2xl font-bold text-blue-700 mt-1">S/.{(totalPorFact/1000).toFixed(0)}k</p>
+          <p className="text-xs text-blue-600 font-medium">Por Facturar — {labelPeriodo}</p>
+          <p className="text-2xl font-bold text-blue-700 mt-1">S/.{totalPorFact.toLocaleString('es-PE',{minimumFractionDigits:0})}</p>
         </div>
       </div>
 
