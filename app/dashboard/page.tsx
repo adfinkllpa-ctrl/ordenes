@@ -1631,6 +1631,8 @@ export default function DashboardPage() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [username, setUsername]   = useState('')
   const [allowedTabs, setAllowedTabs] = useState<string[]>(['ventas','presupuesto','pagos','deudas'])
+  const [welcome, setWelcome]     = useState(true)
+  const [welcomeFade, setWelcomeFade] = useState(false)
 
   const fetchData = useCallback(async () => {
     try {
@@ -1658,6 +1660,12 @@ export default function DashboardPage() {
     const iv = setInterval(fetchData, 60_000)
     return () => clearInterval(iv)
   }, [fetchData])
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setWelcomeFade(true), 2200)
+    const t2 = setTimeout(() => setWelcome(false), 2900)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [])
 
   async function handleLogout() {
     await fetch('/api/logout', { method: 'POST' })
@@ -1687,6 +1695,59 @@ export default function DashboardPage() {
   const [tabActiva, setTabActiva] = useState<'ventas' | 'ventas_socio' | 'presupuesto' | 'pagos' | 'deudas' | 'cobranza' | 'margenes'>('ventas')
 
   return (
+    <>
+    {/* ── PANTALLA DE BIENVENIDA ── */}
+    {welcome && (
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'linear-gradient(135deg, #0b1120 0%, #0f2044 50%, #091428 100%)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: '24px',
+        opacity: welcomeFade ? 0 : 1,
+        transition: 'opacity 0.7s ease',
+        pointerEvents: welcomeFade ? 'none' : 'all',
+      }}>
+        {/* Brillo radial */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(56,139,253,0.12) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+        {/* Logo / ícono */}
+        <div style={{
+          width: 72, height: 72, borderRadius: 20,
+          background: 'linear-gradient(135deg, #1d4ed8, #4361ee)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 0 40px rgba(67,97,238,0.5)',
+          animation: 'pulse 2s ease-in-out infinite',
+        }}>
+          <TrendingUp size={36} color="white" />
+        </div>
+        {/* Textos */}
+        <div style={{ textAlign: 'center', zIndex: 1 }}>
+          <p style={{ color: 'rgba(147,197,253,0.7)', fontSize: 13, letterSpacing: 4, textTransform: 'uppercase', marginBottom: 8 }}>
+            Bienvenido al
+          </p>
+          <h1 style={{ color: 'white', fontSize: 32, fontWeight: 800, letterSpacing: -1, marginBottom: 6 }}>
+            Dashboard Financiero
+          </h1>
+          <p style={{ color: '#4361ee', fontSize: 18, fontWeight: 600 }}>KLLPA PERU</p>
+        </div>
+        {/* Barra de carga */}
+        <div style={{ width: 220, height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden', zIndex: 1 }}>
+          <div style={{
+            height: '100%', background: 'linear-gradient(90deg, #4361ee, #10b981)',
+            borderRadius: 99,
+            animation: 'loadbar 2.2s ease forwards',
+          }} />
+        </div>
+        <style>{`
+          @keyframes loadbar { from { width: 0% } to { width: 100% } }
+          @keyframes pulse { 0%,100% { box-shadow: 0 0 30px rgba(67,97,238,0.4) } 50% { box-shadow: 0 0 55px rgba(67,97,238,0.7) } }
+        `}</style>
+      </div>
+    )}
+
     <div className="min-h-screen" style={{
       background: 'linear-gradient(135deg, #0b1120 0%, #0f2044 40%, #0b1a38 70%, #091428 100%)',
       backgroundAttachment: 'fixed',
@@ -1878,5 +1939,6 @@ export default function DashboardPage() {
       </main>
       </div>
     </div>
+    </>
   )
 }
