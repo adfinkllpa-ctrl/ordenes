@@ -91,4 +91,11 @@ export const SHEETS_CONFIG: SheetConfig[] = [
     category: 'resultados',
     dataRange: 'B96:O103',
   },
+  {
+    id: '1jb_Ed6tzgVAgTR4-FXZrnOJlEJ8tuwvEBxZO6J_Ksbs',
+    tabName: 'resumen',
+    label: 'Cobranza',
+    category: 'resultados',
+    dataRange: 'M2:Q15',
+  },
 ]

@@ -1336,6 +1336,118 @@ function VentasSocio({ data }: { data: SheetData }) {
   )
 }
 
+// ─── COBRANZA ──────────────────────────────────────────────────────────────
+// Sheet "resumen" M2:Q15
+// headers: MES | VENTAS/SUBTOTAL | PAGADO | POR COBRAR | POR FACTURAR
+// rows[0..11] = meses, rows[12] = TOTAL
+
+function CobranzaCard({ data }: { data: SheetData }) {
+  const mesesRows = data.rows.slice(0, 12).filter(r => r[0]?.trim() && toNum(r[1]) > 0)
+  const totalRow  = data.rows.find(r => r[0]?.toUpperCase().includes('TOTAL')) ?? data.rows[12] ?? []
+
+  const totalVentas    = toNum(totalRow[1])
+  const totalPagado    = toNum(totalRow[2])
+  const totalPorCobrar = toNum(totalRow[3])
+  const totalPorFact   = toNum(totalRow[4])
+  const pctCobrado     = totalVentas > 0 ? ((totalPagado / totalVentas) * 100).toFixed(1) : '0'
+
+  const chartData = mesesRows.map(r => ({
+    mes: (r[0] ?? '').slice(0, 3),
+    Ventas:      toNum(r[1]),
+    Pagado:      toNum(r[2]),
+    'Por Cobrar': toNum(r[3]),
+    'Por Facturar': toNum(r[4]),
+  }))
+
+  return (
+    <div className="space-y-5">
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          <p className="text-xs text-gray-500 font-medium">Total Ventas</p>
+          <p className="text-2xl font-bold text-gray-800 mt-1">S/.{(totalVentas/1000).toFixed(0)}k</p>
+        </div>
+        <div className="bg-white rounded-xl border border-emerald-200 shadow-sm p-5">
+          <p className="text-xs text-emerald-600 font-medium">Pagado</p>
+          <p className="text-2xl font-bold text-emerald-700 mt-1">S/.{(totalPagado/1000).toFixed(0)}k</p>
+          <p className="text-xs text-emerald-500 mt-1">{pctCobrado}% cobrado</p>
+        </div>
+        <div className="bg-white rounded-xl border border-amber-200 shadow-sm p-5">
+          <p className="text-xs text-amber-600 font-medium">Por Cobrar</p>
+          <p className="text-2xl font-bold text-amber-700 mt-1">S/.{(totalPorCobrar/1000).toFixed(0)}k</p>
+        </div>
+        <div className="bg-white rounded-xl border border-blue-200 shadow-sm p-5">
+          <p className="text-xs text-blue-600 font-medium">Por Facturar</p>
+          <p className="text-2xl font-bold text-blue-700 mt-1">S/.{(totalPorFact/1000).toFixed(0)}k</p>
+        </div>
+      </div>
+
+      {/* Gráfica + Tabla */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {/* Gráfica */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Evolución mensual</p>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `S/.${(v/1000).toFixed(0)}k`} />
+                <Tooltip formatter={(v: number) => `S/.${v.toLocaleString('es-PE')}`} />
+                <Legend />
+                <Bar dataKey="Ventas"        fill="#4361ee" radius={[3,3,0,0]} />
+                <Bar dataKey="Pagado"        fill="#10b981" radius={[3,3,0,0]} />
+                <Bar dataKey="Por Cobrar"    fill="#f59e0b" radius={[3,3,0,0]} />
+                <Bar dataKey="Por Facturar"  fill="#6366f1" radius={[3,3,0,0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Tabla detalle */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Detalle por mes</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="text-left px-4 py-2 text-xs text-gray-500 font-semibold">Mes</th>
+                  <th className="text-right px-4 py-2 text-xs text-gray-500 font-semibold">Ventas</th>
+                  <th className="text-right px-4 py-2 text-xs text-emerald-600 font-semibold">Pagado</th>
+                  <th className="text-right px-4 py-2 text-xs text-amber-600 font-semibold">x Cobrar</th>
+                  <th className="text-right px-4 py-2 text-xs text-blue-600 font-semibold">x Facturar</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mesesRows.map((row, i) => (
+                  <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                    <td className="px-4 py-2.5 font-medium text-gray-700 capitalize">{(row[0] ?? '').toLowerCase()}</td>
+                    <td className="px-4 py-2.5 text-right text-gray-600">S/.{toNum(row[1]).toLocaleString('es-PE',{minimumFractionDigits:0})}</td>
+                    <td className="px-4 py-2.5 text-right text-emerald-700 font-medium">S/.{toNum(row[2]).toLocaleString('es-PE',{minimumFractionDigits:0})}</td>
+                    <td className="px-4 py-2.5 text-right text-amber-700">S/.{toNum(row[3]).toLocaleString('es-PE',{minimumFractionDigits:0})}</td>
+                    <td className="px-4 py-2.5 text-right text-blue-700">S/.{toNum(row[4]).toLocaleString('es-PE',{minimumFractionDigits:0})}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-gray-50 border-t border-gray-200">
+                  <td className="px-4 py-2.5 font-bold text-gray-800">TOTAL</td>
+                  <td className="px-4 py-2.5 text-right font-bold text-gray-800">S/.{totalVentas.toLocaleString('es-PE',{minimumFractionDigits:0})}</td>
+                  <td className="px-4 py-2.5 text-right font-bold text-emerald-700">S/.{totalPagado.toLocaleString('es-PE',{minimumFractionDigits:0})}</td>
+                  <td className="px-4 py-2.5 text-right font-bold text-amber-700">S/.{totalPorCobrar.toLocaleString('es-PE',{minimumFractionDigits:0})}</td>
+                  <td className="px-4 py-2.5 text-right font-bold text-blue-700">S/.{totalPorFact.toLocaleString('es-PE',{minimumFractionDigits:0})}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── TARJETA GENÉRICA ──────────────────────────────────────────────────────
 const CARD_META = [
   { icon: Scale,    color: 'bg-blue-50 border-blue-200 text-blue-700' },
@@ -1428,6 +1540,7 @@ export default function DashboardPage() {
     router.push('/login')
   }
 
+  const cobranza         = sheets.find(s => s.config?.label === 'Cobranza')
   const flujoEfectivo    = sheets.find(s => s.config?.label === 'Flujo de Efectivo')
   const flujoCaja        = sheets.find(s => s.config?.label === 'Flujo de Caja')
   const pagosProgramados = sheets.find(s => s.config?.label === 'Pagos Programados')
@@ -1442,10 +1555,11 @@ export default function DashboardPage() {
     { id: 'presupuesto',   label: 'Presupuesto', icon: BarChart2  },
     { id: 'pagos',         label: 'Pagos',       icon: DollarSign },
     { id: 'deudas',        label: 'Deudas',      icon: Scale      },
+    { id: 'cobranza',      label: 'Cobranza',    icon: FileText   },
   ] as const
 
   const TABS = ALL_TABS.filter(t => allowedTabs.includes(t.id))
-  const [tabActiva, setTabActiva] = useState<'ventas' | 'ventas_socio' | 'presupuesto' | 'pagos' | 'deudas'>('ventas')
+  const [tabActiva, setTabActiva] = useState<'ventas' | 'ventas_socio' | 'presupuesto' | 'pagos' | 'deudas' | 'cobranza'>('ventas')
 
   return (
     <div className="min-h-screen" style={{
@@ -1575,6 +1689,16 @@ export default function DashboardPage() {
                   : <div className="bg-white rounded-2xl border border-red-200 p-5 flex items-center gap-2 text-red-500">
                       <AlertCircle size={16} /> Error al cargar datos de deudas
                     </div>
+                }
+              </div>
+            )}
+
+            {/* ── PESTAÑA COBRANZA ── */}
+            {tabActiva === 'cobranza' && allowedTabs.includes('cobranza') && (
+              <div className="space-y-5">
+                {cobranza && !cobranza.error
+                  ? <CobranzaCard data={cobranza} />
+                  : <div className="bg-white rounded-2xl border border-red-200 p-5 flex items-center gap-2 text-red-500"><AlertCircle size={16} /> Error al cargar datos de cobranza</div>
                 }
               </div>
             )}

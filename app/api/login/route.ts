@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSession } from '@/lib/session'
 
-const ALL_TABS = ['ventas', 'presupuesto', 'pagos', 'deudas']
+const ALL_TABS = ['ventas', 'presupuesto', 'pagos', 'deudas', 'cobranza']
 
 const USERS = [
-  { username: 'HECTOR',  password: 'BEJARANO', role: 'socio',   tabs: ['ventas_socio'] },
-  { username: 'MAGDA',   password: 'PACHECO',  role: 'socio',   tabs: ['ventas_socio'] },
+  { username: 'HECTOR',  password: 'BEJARANO', role: 'socio',   tabs: ['ventas_socio', 'cobranza'] },
+  { username: 'MAGDA',   password: 'PACHECO',  role: 'socio',   tabs: ['ventas_socio', 'cobranza'] },
   { username: 'GERENTE', password: 'GENERAL',  role: 'gerente', tabs: ALL_TABS },
 ]
 
