@@ -394,10 +394,11 @@ function EbitdaChart({ data }: { data: SheetData }) {
     return { mes: MESES_LABEL[i], EBITDA: ebitda, Margen: margen }
   }).filter(d => d.EBITDA !== 0 || d.Margen !== 0)
 
-  // KPIs acumulados hasta el mes actual
-  const ebitdaAcum = Array.from({ length: MES_ACTUAL + 1 }, (_, i) => toNum(ebitdaRow[i + 1])).reduce((a, b) => a + b, 0)
-  const ventasAcum = Array.from({ length: MES_ACTUAL + 1 }, (_, i) => toNum(ventasRow[i + 1])).reduce((a, b) => a + b, 0)
-  const margenAcum = ventasAcum > 0 ? ((ebitdaAcum / ventasAcum) * 100).toFixed(1) : '0'
+  // KPIs del mes actual
+  const colMes     = MES_ACTUAL + 1
+  const ebitdaMes  = toNum(ebitdaRow[colMes])
+  const ventasMes  = toNum(ventasRow[colMes])
+  const margenMes  = ventasMes > 0 ? ((ebitdaMes / ventasMes) * 100).toFixed(1) : '0'
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden col-span-full">
@@ -407,30 +408,30 @@ function EbitdaChart({ data }: { data: SheetData }) {
         </div>
         <div>
           <h2 className="font-bold text-gray-800 text-base">EBITDA</h2>
-          <p className="text-xs text-gray-400">Evolución mensual · margen = EBITDA / Ventas</p>
+          <p className="text-xs text-gray-400">Evolución mensual · margen = EBITDA / Ventas — {MESES_LABEL[MES_ACTUAL]}</p>
         </div>
       </div>
 
-      {/* KPIs acumulados */}
+      {/* KPIs del mes */}
       <div className="grid grid-cols-3 gap-3 px-6 pt-5 pb-3">
         <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
-          <p className="text-xs text-purple-600">EBITDA acumulado</p>
+          <p className="text-xs text-purple-600">EBITDA — {MESES_LABEL[MES_ACTUAL]}</p>
           <p className="text-xl font-bold text-purple-800 mt-1">
-            S/.{ebitdaAcum.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
+            S/.{ebitdaMes.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
           </p>
         </div>
         <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-          <p className="text-xs text-blue-600">Ventas acumuladas</p>
+          <p className="text-xs text-blue-600">Ventas — {MESES_LABEL[MES_ACTUAL]}</p>
           <p className="text-xl font-bold text-blue-800 mt-1">
-            S/.{ventasAcum.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
+            S/.{ventasMes.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
           </p>
         </div>
-        <div className={`rounded-xl p-4 border ${parseFloat(margenAcum) >= 0 ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
-          <p className={`text-xs ${parseFloat(margenAcum) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+        <div className={`rounded-xl p-4 border ${parseFloat(margenMes) >= 0 ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+          <p className={`text-xs ${parseFloat(margenMes) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             Margen EBITDA
           </p>
-          <p className={`text-xl font-bold mt-1 ${parseFloat(margenAcum) >= 0 ? 'text-green-800' : 'text-red-800'}`}>
-            {margenAcum}%
+          <p className={`text-xl font-bold mt-1 ${parseFloat(margenMes) >= 0 ? 'text-green-800' : 'text-red-800'}`}>
+            {margenMes}%
           </p>
         </div>
       </div>
