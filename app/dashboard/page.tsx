@@ -1486,6 +1486,107 @@ function CobranzaCard({ data }: { data: SheetData }) {
   )
 }
 
+// ─── MARGEN GENÉRICO ───────────────────────────────────────────────────────
+// Reutilizable para Bruto, Antes de Impuestos y Neto
+// utilRow = la fila de utilidad; ventasRow = Ventas Netas (rows[3])
+// Cols 1-12 = meses Ene-Dic
+
+interface MargenChartProps {
+  titulo: string
+  subtitulo: string
+  utilRow: string[]
+  ventasRow: string[]
+  color: { line: string; kpiLight: string; kpiBorder: string; kpiText: string; kpiLabel: string }
+}
+
+function MargenLineChart({ titulo, subtitulo, utilRow, ventasRow, color }: MargenChartProps) {
+  const mesesDisp = Array.from({ length: 12 }, (_, i) => ({ nombre: MESES_LABEL[i], col: i + 1 }))
+    .filter(m => toNum(ventasRow[m.col]) !== 0 || toNum(utilRow[m.col]) !== 0)
+
+  const mesDefault = mesesDisp.find(m => m.col === MES_ACTUAL + 1) ?? mesesDisp[mesesDisp.length - 1]
+  const [mesElegido, setMesElegido] = useState(mesDefault)
+
+  const col      = mesElegido?.col ?? MES_ACTUAL + 1
+  const utilMes  = toNum(utilRow[col])
+  const ventasMes = toNum(ventasRow[col])
+  const margenMes = ventasMes !== 0 ? ((utilMes / ventasMes) * 100).toFixed(1) : '0'
+
+  const chartData = mesesDisp.map(m => ({
+    mes: m.nombre,
+    Utilidad: toNum(utilRow[m.col]),
+    Ventas:   toNum(ventasRow[m.col]),
+    Margen:   toNum(ventasRow[m.col]) !== 0
+      ? parseFloat(((toNum(utilRow[m.col]) / toNum(ventasRow[m.col])) * 100).toFixed(1))
+      : 0,
+  }))
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
+        <div className={`p-2 rounded-xl border ${color.kpiLight} ${color.kpiBorder} ${color.kpiText}`}>
+          <TrendingUp size={18} />
+        </div>
+        <div className="flex-1">
+          <h2 className="font-bold text-gray-800 text-base">{titulo}</h2>
+          <p className="text-xs text-gray-400">{subtitulo}</p>
+        </div>
+        <div className="flex-1 flex justify-center">
+          <select
+            value={mesElegido?.col ?? ''}
+            onChange={e => { const f = mesesDisp.find(m => m.col === Number(e.target.value)); if (f) setMesElegido(f) }}
+            className={`border-2 rounded-xl px-4 py-2 text-sm font-semibold focus:outline-none cursor-pointer ${color.kpiLight} ${color.kpiBorder} ${color.kpiText}`}
+          >
+            {mesesDisp.map(m => <option key={m.col} value={m.col}>{m.nombre}</option>)}
+          </select>
+        </div>
+        <div className="flex-1" />
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-3 gap-3 px-6 pt-5 pb-3">
+        <div className={`rounded-xl p-4 border ${color.kpiLight} ${color.kpiBorder}`}>
+          <p className={`text-xs font-medium ${color.kpiLabel}`}>Utilidad — {mesElegido?.nombre}</p>
+          <p className={`text-xl font-bold mt-1 ${color.kpiText}`}>
+            S/.{utilMes.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
+          </p>
+        </div>
+        <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+          <p className="text-xs font-medium text-blue-500">Ventas Netas — {mesElegido?.nombre}</p>
+          <p className="text-xl font-bold text-blue-800 mt-1">
+            S/.{ventasMes.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
+          </p>
+        </div>
+        <div className={`rounded-xl p-4 border ${parseFloat(margenMes) >= 0 ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+          <p className={`text-xs font-medium ${parseFloat(margenMes) >= 0 ? 'text-green-600' : 'text-red-600'}`}>Margen</p>
+          <p className={`text-xl font-bold mt-1 ${parseFloat(margenMes) >= 0 ? 'text-green-800' : 'text-red-800'}`}>
+            {margenMes}%
+          </p>
+        </div>
+      </div>
+
+      {/* Gráfica */}
+      <div className="px-6 pb-6">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Evolución mensual</p>
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 4, right: 48, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 10 }} tickFormatter={v => `S/.${(v/1000).toFixed(0)}k`} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} domain={['auto','auto']} />
+              <Tooltip formatter={(v: number, name: string) => name === 'Margen' ? `${v}%` : `S/.${v.toLocaleString('es-PE')}`} />
+              <Legend />
+              <Line yAxisId="left"  type="monotone" dataKey="Utilidad" stroke={color.line}  strokeWidth={3} dot={{ r: 4 }} />
+              <Line yAxisId="left"  type="monotone" dataKey="Ventas"   stroke="#4361ee" strokeWidth={2} dot={false} strokeDasharray="4 4" />
+              <Line yAxisId="right" type="monotone" dataKey="Margen"   stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} strokeDasharray="5 3" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── TARJETA GENÉRICA ──────────────────────────────────────────────────────
 const CARD_META = [
   { icon: Scale,    color: 'bg-blue-50 border-blue-200 text-blue-700' },
@@ -1734,9 +1835,38 @@ export default function DashboardPage() {
             {/* ── PESTAÑA MÁRGENES ── */}
             {tabActiva === 'margenes' && allowedTabs.includes('margenes') && (
               <div className="space-y-5">
-                {estadoResultados && !estadoResultados.error
-                  ? <EbitdaChart data={estadoResultados} />
-                  : <div className="bg-white rounded-2xl border border-red-200 p-5 flex items-center gap-2 text-red-500"><AlertCircle size={16} /> Error al cargar datos de márgenes</div>
+                {estadoResultados && !estadoResultados.error ? (() => {
+                  const ventasRow = estadoResultados.rows.find(r => r[0]?.toUpperCase().includes('VENTAS NETAS')) ?? []
+                  return (
+                    <>
+                      <EbitdaChart data={estadoResultados} />
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <MargenLineChart
+                          titulo="Margen Bruto"
+                          subtitulo="Utilidad Bruta / Ventas Netas"
+                          utilRow={estadoResultados.rows.find(r => r[0]?.toUpperCase().includes('UTILIDAD BRUTA')) ?? []}
+                          ventasRow={ventasRow}
+                          color={{ line: '#0ea5e9', kpiLight: 'bg-sky-50', kpiBorder: 'border-sky-200', kpiText: 'text-sky-700', kpiLabel: 'text-sky-500' }}
+                        />
+                        <MargenLineChart
+                          titulo="Margen Antes de Impuestos"
+                          subtitulo="Ut. Antes Impuestos / Ventas Netas"
+                          utilRow={estadoResultados.rows.find(r => r[0]?.toUpperCase().includes('UTILIDAD ANTES')) ?? []}
+                          ventasRow={ventasRow}
+                          color={{ line: '#f59e0b', kpiLight: 'bg-amber-50', kpiBorder: 'border-amber-200', kpiText: 'text-amber-700', kpiLabel: 'text-amber-500' }}
+                        />
+                        <MargenLineChart
+                          titulo="Margen Neto"
+                          subtitulo="Utilidad Neta / Ventas Netas"
+                          utilRow={estadoResultados.rows.find(r => r[0]?.toUpperCase().includes('UTILIDAD NETA')) ?? []}
+                          ventasRow={ventasRow}
+                          color={{ line: '#8b5cf6', kpiLight: 'bg-violet-50', kpiBorder: 'border-violet-200', kpiText: 'text-violet-700', kpiLabel: 'text-violet-500' }}
+                        />
+                      </div>
+                    </>
+                  )
+                })()
+                : <div className="bg-white rounded-2xl border border-red-200 p-5 flex items-center gap-2 text-red-500"><AlertCircle size={16} /> Error al cargar datos de márgenes</div>
                 }
               </div>
             )}
