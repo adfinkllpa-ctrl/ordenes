@@ -389,10 +389,10 @@ function EbitdaChart({ data }: { data: SheetData }) {
   const mesesDisp = Array.from({ length: 12 }, (_, i) => ({ nombre: MESES_LABEL[i], col: i + 1 }))
     .filter(m => toNum(ventasRow[m.col]) !== 0 || toNum(ebitdaRow[m.col]) !== 0)
 
-  const mesDefault = mesesDisp.find(m => m.col === MES_ACTUAL + 1) ?? mesesDisp[mesesDisp.length - 1]
+  const mesDefault = mesesDisp[0]
   const [mesElegido, setMesElegido] = useState(mesDefault)
 
-  const col       = mesElegido?.col ?? MES_ACTUAL + 1
+  const col       = mesElegido?.col ?? 1
   const ebitdaMes = toNum(ebitdaRow[col])
   const ventasMes = toNum(ventasRow[col])
   const margenMes = ventasMes !== 0 ? ((ebitdaMes / ventasMes) * 100).toFixed(1) : '0'
@@ -637,8 +637,7 @@ function PagosDelMes({ data }: { data: SheetData }) {
     .map((h, i) => ({ nombre: h?.trim().toLowerCase(), col: i }))
     .filter(h => h.nombre && h.nombre !== '')
 
-  const mesDefault = mesesDisponibles.find(m => m.nombre === MESES_ES[MES_ACTUAL])
-    ?? mesesDisponibles[0]
+  const mesDefault = mesesDisponibles[0]
 
   const [mesSeleccionado, setMesSeleccionado] = useState(mesDefault)
 
@@ -746,8 +745,7 @@ function PagosProgramados({ data }: { data: SheetData }) {
 
   // Detectar fecha actual: buscar la próxima fecha que contenga el mes actual
   const mesActualNombre = MESES_ES[MES_ACTUAL]
-  const fechaDefault =
-    fechas.find(f => f.fecha.toLowerCase().includes(mesActualNombre)) ?? fechas[0]
+  const fechaDefault = fechas[0]
 
   const [fechaSeleccionada, setFechaSeleccionada] = useState(fechaDefault)
 
@@ -874,7 +872,7 @@ function VentasUnidadNegocio({ sheets }: { sheets: SheetData[] }) {
   const colN = refHeaders.length - 1
   const mesesDisp = mesesCols.filter(m => m.col < colN)
 
-  const mesDefault = mesesDisp.find(m => m.mes.toLowerCase() === MESES_ES[MES_ACTUAL]) ?? mesesDisp[mesesDisp.length - 1]
+  const mesDefault = mesesDisp[0]
   const [mesElegido, setMesElegido] = useState(mesDefault)
   const [vistaElegida, setVistaElegida] = useState<'mensual' | 'acumulado'>('mensual')
 
@@ -1213,7 +1211,7 @@ function VentasSocio({ data }: { data: SheetData }) {
   const tipoRows  = data.rows.slice(0, 6).filter(r => r[0]?.trim())
   const totalRow  = data.rows[6] ?? []
 
-  const mesDefault = meses.find(m => m.nombre?.toLowerCase() === MESES_ES[MES_ACTUAL]) ?? meses[meses.length - 1]
+  const mesDefault = meses[0]
   const [mesElegido, setMesElegido] = useState(mesDefault)
   const [vista, setVista] = useState<'mensual' | 'acumulado'>('mensual')
 
@@ -1497,10 +1495,10 @@ function MargenLineChart({ titulo, subtitulo, utilRow, ventasRow, color }: Marge
   const mesesDisp = Array.from({ length: 12 }, (_, i) => ({ nombre: MESES_LABEL[i], col: i + 1 }))
     .filter(m => toNum(ventasRow[m.col]) !== 0 || toNum(utilRow[m.col]) !== 0)
 
-  const mesDefault = mesesDisp.find(m => m.col === MES_ACTUAL + 1) ?? mesesDisp[mesesDisp.length - 1]
+  const mesDefault = mesesDisp[0]
   const [mesElegido, setMesElegido] = useState(mesDefault)
 
-  const col      = mesElegido?.col ?? MES_ACTUAL + 1
+  const col      = mesElegido?.col ?? 1
   const utilMes  = toNum(utilRow[col])
   const ventasMes = toNum(ventasRow[col])
   const margenMes = ventasMes !== 0 ? ((utilMes / ventasMes) * 100).toFixed(1) : '0'
