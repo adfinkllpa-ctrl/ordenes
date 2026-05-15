@@ -373,6 +373,90 @@ function BalanceGeneralTrim({ data }: { data: SheetData }) {
   )
 }
 
+// ─── EBITDA ────────────────────────────────────────────────────────────────
+// Sheet "ER" — rango A6:O40
+// headers = fila 6 (meses en cols 1-12)
+// rows[3]  = fila 10 → Ventas brutas
+// rows[17] = fila 24 → EBITDA
+// Margen = EBITDA / Ventas * 100 por mes
+
+function EbitdaChart({ data }: { data: SheetData }) {
+  const findRow = (k: string) => data.rows.find(r => r[0]?.toUpperCase().includes(k.toUpperCase())) ?? []
+  const ebitdaRow = findRow('EBITDA')
+  const ventasRow = findRow('Ventas brutas')
+
+  // Cols 1-12 = meses B-M
+  const chartData = Array.from({ length: 12 }, (_, i) => {
+    const col    = i + 1
+    const ebitda = toNum(ebitdaRow[col])
+    const ventas = toNum(ventasRow[col])
+    const margen = ventas !== 0 ? parseFloat(((ebitda / ventas) * 100).toFixed(1)) : 0
+    return { mes: MESES_LABEL[i], EBITDA: ebitda, Margen: margen }
+  }).filter(d => d.EBITDA !== 0 || d.Margen !== 0)
+
+  // KPIs acumulados hasta el mes actual
+  const ebitdaAcum = Array.from({ length: MES_ACTUAL + 1 }, (_, i) => toNum(ebitdaRow[i + 1])).reduce((a, b) => a + b, 0)
+  const ventasAcum = Array.from({ length: MES_ACTUAL + 1 }, (_, i) => toNum(ventasRow[i + 1])).reduce((a, b) => a + b, 0)
+  const margenAcum = ventasAcum > 0 ? ((ebitdaAcum / ventasAcum) * 100).toFixed(1) : '0'
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden col-span-full">
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
+        <div className="p-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-700">
+          <TrendingUp size={18} />
+        </div>
+        <div>
+          <h2 className="font-bold text-gray-800 text-base">EBITDA</h2>
+          <p className="text-xs text-gray-400">Evolución mensual · margen = EBITDA / Ventas</p>
+        </div>
+      </div>
+
+      {/* KPIs acumulados */}
+      <div className="grid grid-cols-3 gap-3 px-6 pt-5 pb-3">
+        <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
+          <p className="text-xs text-purple-600">EBITDA acumulado</p>
+          <p className="text-xl font-bold text-purple-800 mt-1">
+            S/.{ebitdaAcum.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
+          </p>
+        </div>
+        <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+          <p className="text-xs text-blue-600">Ventas acumuladas</p>
+          <p className="text-xl font-bold text-blue-800 mt-1">
+            S/.{ventasAcum.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
+          </p>
+        </div>
+        <div className={`rounded-xl p-4 border ${parseFloat(margenAcum) >= 0 ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+          <p className={`text-xs ${parseFloat(margenAcum) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            Margen EBITDA
+          </p>
+          <p className={`text-xl font-bold mt-1 ${parseFloat(margenAcum) >= 0 ? 'text-green-800' : 'text-red-800'}`}>
+            {margenAcum}%
+          </p>
+        </div>
+      </div>
+
+      {/* Gráfica evolución */}
+      <div className="px-6 pb-6">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Evolución mensual</p>
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 4, right: 48, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 10 }} tickFormatter={v => `S/.${(v / 1000).toFixed(0)}k`} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} domain={['auto', 'auto']} />
+              <Tooltip formatter={(v: number, name: string) => name === 'Margen' ? `${v}%` : `S/.${v.toLocaleString('es-PE')}`} />
+              <Legend />
+              <Line yAxisId="left"  type="monotone" dataKey="EBITDA" stroke="#7c3aed" strokeWidth={3} dot={{ r: 4 }} />
+              <Line yAxisId="right" type="monotone" dataKey="Margen" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} strokeDasharray="5 3" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── PRESUPUESTO 2026 ──────────────────────────────────────────────────────
 // Fila 4 (headers): [label, "enero","","", "febrero","","", "marzo","","", "Q1","","", ...]
 // Fila 5 (rows[0]): [label, est,act,dif, est,act,dif, est,act,dif, est,act,dif, ...]
@@ -1330,6 +1414,7 @@ export default function DashboardPage() {
   const ventasSheets     = sheets.filter(s => s.config?.label?.startsWith('Ventas '))
   const presupuesto      = sheets.find(s => s.config?.label === 'Presupuesto')
   const deudas           = sheets.find(s => s.config?.label === 'Deudas')
+  const estadoResultados = sheets.find(s => s.config?.label === 'Estado de Resultados')
 
   const ALL_TABS = [
     { id: 'ventas',        label: 'Ventas',      icon: TrendingUp },
@@ -1432,6 +1517,7 @@ export default function DashboardPage() {
                   )
                 }
                 {ventasSheets.length > 0 && <VentasUnidadNegocio sheets={ventasSheets} />}
+                {estadoResultados && !estadoResultados.error && <EbitdaChart data={estadoResultados} />}
               </div>
             )}
 
