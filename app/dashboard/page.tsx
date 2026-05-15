@@ -433,17 +433,11 @@ function EbitdaChart({ data }: { data: SheetData }) {
       </div>
 
       {/* KPIs del mes seleccionado */}
-      <div className="grid grid-cols-3 gap-3 px-6 pt-5 pb-3">
+      <div className="grid grid-cols-2 gap-3 px-6 pt-5 pb-3">
         <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
           <p className="text-xs text-purple-600">EBITDA — {mesElegido?.nombre}</p>
           <p className="text-xl font-bold text-purple-800 mt-1">
             S/.{ebitdaMes.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
-          </p>
-        </div>
-        <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-          <p className="text-xs text-blue-600">Ventas Netas — {mesElegido?.nombre}</p>
-          <p className="text-xl font-bold text-blue-800 mt-1">
-            S/.{ventasMes.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
           </p>
         </div>
         <div className={`rounded-xl p-4 border ${parseFloat(margenMes) >= 0 ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
@@ -1543,17 +1537,11 @@ function MargenLineChart({ titulo, subtitulo, utilRow, ventasRow, color }: Marge
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-3 px-6 pt-5 pb-3">
+      <div className="grid grid-cols-2 gap-3 px-6 pt-5 pb-3">
         <div className={`rounded-xl p-4 border ${color.kpiLight} ${color.kpiBorder}`}>
           <p className={`text-xs font-medium ${color.kpiLabel}`}>Utilidad — {mesElegido?.nombre}</p>
           <p className={`text-xl font-bold mt-1 ${color.kpiText}`}>
             S/.{utilMes.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
-          </p>
-        </div>
-        <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-          <p className="text-xs font-medium text-blue-500">Ventas Netas — {mesElegido?.nombre}</p>
-          <p className="text-xl font-bold text-blue-800 mt-1">
-            S/.{ventasMes.toLocaleString('es-PE', { minimumFractionDigits: 0 })}
           </p>
         </div>
         <div className={`rounded-xl p-4 border ${parseFloat(margenMes) >= 0 ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
