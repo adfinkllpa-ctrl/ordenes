@@ -1337,7 +1337,6 @@ function CobranzaCard({ data }: { data: SheetData }) {
   const mesesRows = data.rows.slice(0, 12).filter(r => r[0]?.trim() && toNum(r[1]) > 0)
   const totalRow  = data.rows.find(r => r[0]?.toUpperCase().includes('TOTAL')) ?? data.rows[12] ?? []
 
-  const mesDefault = mesesRows.find((_, i) => i === Math.min(MES_ACTUAL, mesesRows.length - 1)) ?? mesesRows[mesesRows.length - 1]
   const [mesElegido, setMesElegido] = useState<string | null>(null)
 
   const filaActiva = mesElegido ? mesesRows.find(r => r[0] === mesElegido) ?? totalRow : totalRow
