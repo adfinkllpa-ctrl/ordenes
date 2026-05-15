@@ -1636,10 +1636,13 @@ export default function DashboardPage() {
 
   const fetchData = useCallback(async () => {
     try {
+      const ctrl = new AbortController()
+      const timeout = setTimeout(() => ctrl.abort(), 20_000)
       const [sheetsRes, meRes] = await Promise.all([
-        fetch('/api/sheets'),
-        fetch('/api/me'),
+        fetch('/api/sheets', { signal: ctrl.signal }),
+        fetch('/api/me',     { signal: ctrl.signal }),
       ])
+      clearTimeout(timeout)
       if (sheetsRes.status === 401) { router.push('/login'); return }
       const data = await sheetsRes.json()
       setSheets(Array.isArray(data) ? data : [])
@@ -1649,7 +1652,7 @@ export default function DashboardPage() {
         setUsername(me.username ?? '')
         const tabs = me.tabs ?? ['ventas','presupuesto','pagos','deudas']
         setAllowedTabs(tabs)
-        if (tabs.length > 0) setTabActiva(tabs[0] as 'ventas' | 'ventas_socio' | 'presupuesto' | 'pagos' | 'deudas')
+        if (tabs.length > 0) setTabActiva(tabs[0] as 'ventas' | 'ventas_socio' | 'presupuesto' | 'pagos' | 'deudas' | 'cobranza' | 'margenes')
       }
     } catch (err) { console.error(err) }
     finally { setLoading(false) }
