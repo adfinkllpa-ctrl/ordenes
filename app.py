@@ -64,8 +64,6 @@ def verify_webhook():
 def receive_message():
     """Recibe mensajes entrantes de WhatsApp."""
     data = request.get_json(silent=True)
-    with open("debug.log", "a") as f:
-        f.write(f"POST recibido: {data}\n")
     if not data:
         return jsonify({"status": "ok"}), 200
 
@@ -123,14 +121,10 @@ def receive_message():
             sheets_context=sheets_ctx,
         )
 
-        result = send_whatsapp_message(sender, reply)
-        with open("debug.log", "a") as f:
-            f.write(f"Respuesta enviada a {sender}: status={result.status_code} body={result.text[:200]}\n")
+        send_whatsapp_message(sender, reply)
 
     except Exception as exc:
         logger.exception("Error procesando mensaje: %s", exc)
-        with open("debug.log", "a") as f:
-            f.write(f"ERROR: {exc}\n")
 
     return jsonify({"status": "ok"}), 200
 
