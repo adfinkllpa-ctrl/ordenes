@@ -2,6 +2,7 @@
 Lee Google Sheets específicos y carpetas de Drive configuradas manualmente.
 """
 import os
+import json
 import logging
 from typing import Optional
 
@@ -16,6 +17,14 @@ SCOPES = [
 ]
 
 SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE", "service_account.json")
+
+
+def _get_credentials():
+    json_str = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+    if json_str:
+        info = json.loads(json_str)
+        return Credentials.from_service_account_info(info, scopes=SCOPES)
+    return Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
 MAX_CHARS_PER_SHEET = 8_000
 MAX_TOTAL_CHARS = 60_000
@@ -36,12 +45,12 @@ SPECIFIC_FOLDERS = [
 
 
 def _get_drive_service():
-    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    creds = _get_credentials()
     return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 
 def _get_sheets_service():
-    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    creds = _get_credentials()
     return build("sheets", "v4", credentials=creds, cache_discovery=False)
 
 

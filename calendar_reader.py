@@ -6,6 +6,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+import json
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
@@ -21,8 +22,16 @@ DAYS_AHEAD = int(os.getenv("CALENDAR_DAYS_AHEAD", "14"))
 MAX_EVENTS = 30
 
 
+def _get_credentials():
+    json_str = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+    if json_str:
+        info = json.loads(json_str)
+        return Credentials.from_service_account_info(info, scopes=SCOPES)
+    return Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+
+
 def _get_calendar_service():
-    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    creds = _get_credentials()
     return build("calendar", "v3", credentials=creds, cache_discovery=False)
 
 
