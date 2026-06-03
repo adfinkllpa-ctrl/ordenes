@@ -7,6 +7,7 @@ const USERS = [
   { username: 'HECTOR',  password: 'BEJARANO', role: 'socio',   tabs: ['ventas_socio', 'cobranza', 'margenes'] },
   { username: 'MAGDA',   password: 'PACHECO',  role: 'socio',   tabs: ['ventas_socio', 'cobranza', 'margenes'] },
   { username: 'GERENTE', password: 'GENERAL',  role: 'gerente', tabs: ALL_TABS },
+  { username: 'ALEX',    password: 'KLLPA2026', role: 'admin',  tabs: [...ALL_TABS, 'ventas_socio', 'admin'] },
 ]
 
 export async function POST(req: NextRequest) {

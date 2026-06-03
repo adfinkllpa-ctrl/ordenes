@@ -1607,7 +1607,7 @@ function SheetCard({ sheet, index }: { sheet: SheetData; index: number }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-shadow duration-200 hover:shadow-md">
       <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
         <div className={`p-2 rounded-lg border ${meta.color}`}><Icon size={16} /></div>
         <div>
@@ -1623,6 +1623,273 @@ function SheetCard({ sheet, index }: { sheet: SheetData; index: number }) {
   )
 }
 
+// ─── PANEL ADMIN (solo ALEX) ───────────────────────────────────────────────
+function AdminPanel({
+  sheets, flujoEfectivo, ventasSheets, estadoResultados,
+  presupuesto, presupuestoPorAreaData, flujoCaja, pagosProgramados, deudas, cobranza
+}: {
+  sheets: SheetData[]
+  flujoEfectivo?: SheetData
+  ventasSheets: SheetData[]
+  estadoResultados?: SheetData
+  presupuesto?: SheetData
+  presupuestoPorAreaData?: SheetData
+  flujoCaja?: SheetData
+  pagosProgramados?: SheetData
+  deudas?: SheetData
+  cobranza?: SheetData
+}) {
+  const [subTab, setSubTab] = useState<'finanzas' | 'mimodulo'>('finanzas')
+
+  const SUB_TABS = [
+    { id: 'finanzas' as const,  label: '📊 Finanzas',   desc: 'Vista completa financiera' },
+    { id: 'mimodulo' as const,  label: '🛡 Mi Módulo',  desc: 'Panel exclusivo ALEX' },
+  ]
+
+  return (
+    <div className="space-y-5">
+      {/* Header exclusivo admin */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(234,179,8,0.12) 0%, rgba(161,98,7,0.08) 100%)',
+        border: '1px solid rgba(234,179,8,0.3)',
+        borderRadius: 16,
+        padding: '20px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 16,
+      }}>
+        <div style={{
+          width: 48, height: 48, borderRadius: 14,
+          background: 'linear-gradient(135deg, #ca8a04, #eab308)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 0 20px rgba(234,179,8,0.35)',
+          fontSize: 22,
+        }}>⚙</div>
+        <div>
+          <p style={{ color: '#fde68a', fontSize: 18, fontWeight: 800, letterSpacing: -0.5 }}>
+            Panel Administrador — ALEX
+          </p>
+          <p style={{ color: 'rgba(253,230,138,0.6)', fontSize: 12, marginTop: 2 }}>
+            Acceso exclusivo · No visible para otros usuarios
+          </p>
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <span style={{
+            background: 'rgba(234,179,8,0.15)', border: '1px solid rgba(234,179,8,0.4)',
+            borderRadius: 99, padding: '4px 12px', color: '#fde68a', fontSize: 11, fontWeight: 600,
+          }}>🔒 SOLO TÚ</span>
+        </div>
+      </div>
+
+      {/* Sub-pestañas */}
+      <div style={{ display: 'flex', gap: 8 }}>
+        {SUB_TABS.map(st => (
+          <button
+            key={st.id}
+            onClick={() => setSubTab(st.id)}
+            style={{
+              padding: '10px 22px',
+              borderRadius: 12,
+              border: subTab === st.id
+                ? '1px solid rgba(234,179,8,0.6)'
+                : '1px solid rgba(255,255,255,0.08)',
+              background: subTab === st.id
+                ? 'rgba(234,179,8,0.18)'
+                : 'rgba(255,255,255,0.04)',
+              color: subTab === st.id ? '#fde68a' : 'rgba(255,255,255,0.4)',
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: subTab === st.id ? '0 0 12px rgba(234,179,8,0.2)' : 'none',
+            }}
+          >
+            {st.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── SUB-PESTAÑA: FINANZAS (vista completa) ── */}
+      {subTab === 'finanzas' && (
+        <div className="space-y-5">
+          <p style={{ color: 'rgba(253,230,138,0.5)', fontSize: 12, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase' }}>
+            Vista Completa Financiera
+          </p>
+          {/* Flujo de Efectivo */}
+          {flujoEfectivo && !flujoEfectivo.error && <FlujoEfectivoHero data={flujoEfectivo} />}
+          {/* Ventas por Unidad */}
+          {ventasSheets.length > 0 && <VentasUnidadNegocio sheets={ventasSheets} />}
+          {/* EBITDA */}
+          {estadoResultados && !estadoResultados.error && <EbitdaChart data={estadoResultados} />}
+          {/* Presupuesto */}
+          {presupuesto && !presupuesto.error && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <SheetCard sheet={presupuesto} index={0} />
+              <PresupuestoPorArea data={presupuesto} />
+            </div>
+          )}
+          {/* Pagos */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {flujoCaja        && !flujoCaja.error        && <PagosDelMes      data={flujoCaja} />}
+            {pagosProgramados && !pagosProgramados.error && <PagosProgramados data={pagosProgramados} />}
+          </div>
+          {/* Deudas */}
+          {deudas && !deudas.error && <DeudasCard data={deudas} />}
+          {/* Cobranza */}
+          {cobranza && !cobranza.error && <CobranzaCard data={cobranza} />}
+          {/* Márgenes */}
+          {estadoResultados && !estadoResultados.error && (() => {
+            const ventasRow = estadoResultados.rows.find(r => r[0]?.toUpperCase().includes('VENTAS NETAS')) ?? []
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <MargenLineChart titulo="Margen Bruto" subtitulo="Utilidad Bruta / Ventas Netas"
+                  utilRow={estadoResultados.rows.find(r => r[0]?.toUpperCase().includes('UTILIDAD BRUTA')) ?? []}
+                  ventasRow={ventasRow}
+                  color={{ line: '#0ea5e9', kpiLight: 'bg-sky-50', kpiBorder: 'border-sky-200', kpiText: 'text-sky-700', kpiLabel: 'text-sky-500' }} />
+                <MargenLineChart titulo="Margen Antes de Impuestos" subtitulo="Ut. Antes Impuestos / Ventas Netas"
+                  utilRow={estadoResultados.rows.find(r => r[0]?.toUpperCase().includes('UTILIDAD ANTES')) ?? []}
+                  ventasRow={ventasRow}
+                  color={{ line: '#f59e0b', kpiLight: 'bg-amber-50', kpiBorder: 'border-amber-200', kpiText: 'text-amber-700', kpiLabel: 'text-amber-500' }} />
+                <MargenLineChart titulo="Margen Neto" subtitulo="Utilidad Neta / Ventas Netas"
+                  utilRow={estadoResultados.rows.find(r => r[0]?.toUpperCase().includes('UTILIDAD NETA')) ?? []}
+                  ventasRow={ventasRow}
+                  color={{ line: '#8b5cf6', kpiLight: 'bg-violet-50', kpiBorder: 'border-violet-200', kpiText: 'text-violet-700', kpiLabel: 'text-violet-500' }} />
+              </div>
+            )
+          })()}
+        </div>
+      )}
+
+      {/* ── SUB-PESTAÑA: MI MÓDULO (panel admin exclusivo) ── */}
+      {subTab === 'mimodulo' && (
+        <div className="space-y-5">
+          <p style={{ color: 'rgba(253,230,138,0.5)', fontSize: 12, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase' }}>
+            Panel Exclusivo Admin
+          </p>
+
+          {/* Resumen de usuarios */}
+          <div style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(234,179,8,0.2)',
+            borderRadius: 16,
+            padding: '24px',
+          }}>
+            <div className="flex items-center gap-3 mb-5">
+              <div style={{ fontSize: 20 }}>👥</div>
+              <div>
+                <h3 style={{ color: 'white', fontWeight: 700, fontSize: 15 }}>Usuarios del Sistema</h3>
+                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Accesos configurados</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {[
+                { nombre: 'HECTOR',  rol: 'Socio',    tabs: 'Proyección · Cobranza · Márgenes',   color: 'rgba(59,130,246,0.15)',  border: 'rgba(59,130,246,0.3)',  badge: '#93c5fd' },
+                { nombre: 'MAGDA',   rol: 'Socia',    tabs: 'Proyección · Cobranza · Márgenes',   color: 'rgba(168,85,247,0.15)', border: 'rgba(168,85,247,0.3)', badge: '#d8b4fe' },
+                { nombre: 'GERENTE', rol: 'Gerente',  tabs: 'Todos los módulos financieros',      color: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)', badge: '#6ee7b7' },
+                { nombre: 'ALEX',    rol: '⭐ Admin', tabs: 'Acceso total + Panel Admin',          color: 'rgba(234,179,8,0.15)',  border: 'rgba(234,179,8,0.35)', badge: '#fde68a' },
+              ].map(u => (
+                <div key={u.nombre} style={{
+                  background: u.color,
+                  border: `1px solid ${u.border}`,
+                  borderRadius: 12,
+                  padding: '16px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 12,
+                }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    background: u.border,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: 800, fontSize: 14, color: 'white', flexShrink: 0,
+                  }}>{u.nombre[0]}</div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>{u.nombre}</span>
+                      <span style={{
+                        background: u.border, borderRadius: 99,
+                        padding: '2px 8px', fontSize: 10, fontWeight: 600, color: u.badge,
+                      }}>{u.rol}</span>
+                    </div>
+                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>{u.tabs}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Resumen ejecutivo de KPIs */}
+          <div style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(234,179,8,0.2)',
+            borderRadius: 16,
+            padding: '24px',
+          }}>
+            <div className="flex items-center gap-3 mb-5">
+              <div style={{ fontSize: 20 }}>📈</div>
+              <div>
+                <h3 style={{ color: 'white', fontWeight: 700, fontSize: 15 }}>Resumen Ejecutivo — Vista ALEX</h3>
+                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>Consolidado de todos los módulos</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { label: 'Módulos activos',     value: sheets.filter(s => !s.error).length.toString(),  icon: '✅', color: '#10b981' },
+                { label: 'Módulos con error',   value: sheets.filter(s =>  s.error).length.toString(),   icon: '⚠️', color: '#ef4444' },
+                { label: 'Total sheets',        value: sheets.length.toString(),                          icon: '📋', color: '#4361ee' },
+                { label: 'Usuarios activos',    value: '4',                                               icon: '👤', color: '#eab308' },
+              ].map((k, i) => (
+                <div key={i} style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${k.color}40`,
+                  borderRadius: 12, padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: 24, marginBottom: 6 }}>{k.icon}</div>
+                  <p style={{ color: k.color, fontSize: 26, fontWeight: 800 }}>{k.value}</p>
+                  <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 2 }}>{k.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Log de sheets activos */}
+          <div style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(234,179,8,0.2)',
+            borderRadius: 16,
+            padding: '24px',
+          }}>
+            <div className="flex items-center gap-3 mb-4">
+              <div style={{ fontSize: 18 }}>🗂</div>
+              <h3 style={{ color: 'white', fontWeight: 700, fontSize: 15 }}>Estado de Datos — Google Sheets</h3>
+            </div>
+            <div className="space-y-2">
+              {sheets.map((s, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 14px',
+                  background: s.error ? 'rgba(239,68,68,0.06)' : 'rgba(16,185,129,0.06)',
+                  border: `1px solid ${s.error ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.15)'}`,
+                  borderRadius: 10,
+                }}>
+                  <span style={{ fontSize: 14 }}>{s.error ? '🔴' : '🟢'}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, flex: 1 }}>
+                    {s.config?.label ?? `Sheet ${i + 1}`}
+                  </span>
+                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>
+                    {s.error ? s.errorMsg ?? 'Error' : `${s.rows?.length ?? 0} filas`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── PÁGINA PRINCIPAL ──────────────────────────────────────────────────────
 export default function DashboardPage() {
   const router = useRouter()
@@ -1630,6 +1897,7 @@ export default function DashboardPage() {
   const [loading, setLoading]     = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [username, setUsername]   = useState('')
+  const [role, setRole]           = useState('')
   const [allowedTabs, setAllowedTabs] = useState<string[]>(['ventas','presupuesto','pagos','deudas'])
   const [welcome, setWelcome]     = useState(true)
   const [welcomeFade, setWelcomeFade] = useState(false)
@@ -1650,9 +1918,10 @@ export default function DashboardPage() {
       if (meRes.ok) {
         const me = await meRes.json()
         setUsername(me.username ?? '')
+        setRole(me.role ?? '')
         const tabs = me.tabs ?? ['ventas','presupuesto','pagos','deudas']
         setAllowedTabs(tabs)
-        if (tabs.length > 0) setTabActiva(tabs[0] as 'ventas' | 'ventas_socio' | 'presupuesto' | 'pagos' | 'deudas' | 'cobranza' | 'margenes')
+        if (tabs.length > 0) setTabActiva(tabs[0] as 'ventas' | 'ventas_socio' | 'presupuesto' | 'pagos' | 'deudas' | 'cobranza' | 'margenes' | 'admin')
       }
     } catch (err) { console.error(err) }
     finally { setLoading(false) }
@@ -1686,16 +1955,17 @@ export default function DashboardPage() {
 
   const ALL_TABS = [
     { id: 'ventas',        label: 'Ventas',      icon: TrendingUp },
-    { id: 'ventas_socio',  label: 'Ventas',      icon: TrendingUp },
+    { id: 'ventas_socio',  label: 'Proyección',  icon: BarChart2  },
     { id: 'presupuesto',   label: 'Presupuesto', icon: BarChart2  },
     { id: 'pagos',         label: 'Pagos',       icon: DollarSign },
     { id: 'deudas',        label: 'Deudas',      icon: Scale      },
     { id: 'cobranza',      label: 'Cobranza',    icon: FileText   },
     { id: 'margenes',      label: 'Márgenes',    icon: TrendingUp },
+    { id: 'admin',         label: '⚙ Admin',     icon: Scale,  adminOnly: true },
   ] as const
 
   const TABS = ALL_TABS.filter(t => allowedTabs.includes(t.id))
-  const [tabActiva, setTabActiva] = useState<'ventas' | 'ventas_socio' | 'presupuesto' | 'pagos' | 'deudas' | 'cobranza' | 'margenes'>('ventas')
+  const [tabActiva, setTabActiva] = useState<'ventas' | 'ventas_socio' | 'presupuesto' | 'pagos' | 'deudas' | 'cobranza' | 'margenes' | 'admin'>('ventas')
 
   return (
     <>
@@ -1774,49 +2044,116 @@ export default function DashboardPage() {
       <header className="px-6 py-4 sticky top-0 z-10" style={{ background: 'rgba(11,17,32,0.85)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(56,139,253,0.15)' }}>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-base font-bold text-white">Dashboard Financiero — KLLPA PERU</h1>
-            {username && <p className="text-xs text-blue-300 mt-0.5">Bienvenido, {username}</p>}
-            {lastUpdate && (
-              <p className="text-xs text-blue-300">
-                Actualizado: {lastUpdate.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}
-                {' · '}auto-refresca cada 60 seg
-              </p>
-            )}
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #1d4ed8, #4361ee)' }}>
+                <TrendingUp size={12} color="white" />
+              </div>
+              <h1 className="text-sm font-bold text-white tracking-tight">Dashboard Financiero — KLLPA PERU</h1>
+            </div>
+            <div className="flex items-center gap-2 mt-0.5 ml-8">
+              {username && <span className="text-xs text-blue-300/70">{username}</span>}
+              {username && lastUpdate && <span className="text-blue-300/30 text-xs">·</span>}
+              {lastUpdate && (
+                <span className="text-xs text-blue-300/50">
+                  Actualizado {lastUpdate.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+              <span className="flex items-center gap-1 text-xs text-emerald-400/70">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                EN VIVO
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={fetchData} className="flex items-center gap-1.5 text-sm text-blue-300 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/10">
-              <RefreshCw size={14} /> Actualizar
+          <div className="flex items-center gap-1">
+            <button
+              onClick={fetchData}
+              className="flex items-center gap-1.5 text-xs text-blue-300/70 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/8 transition-all duration-150 cursor-pointer"
+              aria-label="Actualizar datos"
+            >
+              <RefreshCw size={13} /> Actualizar
             </button>
-            <button onClick={handleLogout} className="flex items-center gap-1.5 text-sm text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500/20">
-              <LogOut size={14} /> Salir
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-xs text-red-400/70 hover:text-red-300 px-3 py-1.5 rounded-lg hover:bg-red-500/15 transition-all duration-150 cursor-pointer"
+              aria-label="Cerrar sesión"
+            >
+              <LogOut size={13} /> Salir
             </button>
           </div>
         </div>
 
         {/* Pestañas */}
-        <div className="max-w-7xl mx-auto mt-3 flex gap-1">
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setTabActiva(id)}
-              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                tabActiva === id
-                  ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
-                  : 'text-blue-200/60 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <Icon size={15} />
-              {label}
-            </button>
-          ))}
+        <div className="max-w-7xl mx-auto mt-3 flex gap-1 flex-wrap">
+          {TABS.map(({ id, label, icon: Icon }) => {
+            const isAdmin = id === 'admin'
+            const isActive = tabActiva === id
+            return (
+              <button
+                key={id}
+                onClick={() => setTabActiva(id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                  isActive
+                    ? 'text-white'
+                    : isAdmin
+                      ? 'text-yellow-300/70 hover:text-yellow-200 hover:bg-yellow-500/10'
+                      : 'text-blue-200/50 hover:text-blue-200 hover:bg-white/5'
+                }`}
+                style={isActive ? {
+                  background: isAdmin ? 'rgba(234,179,8,0.2)' : 'rgba(67,97,238,0.25)',
+                  border: `1px solid ${isAdmin ? 'rgba(234,179,8,0.6)' : 'rgba(67,97,238,0.5)'}`,
+                  boxShadow: isAdmin ? '0 0 14px rgba(234,179,8,0.3)' : '0 0 12px rgba(67,97,238,0.2)',
+                } : { border: '1px solid transparent' }}
+              >
+                <Icon size={14} />
+                {label}
+              </button>
+            )
+          })}
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-6 space-y-5">
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-3">
-            <Loader2 size={32} className="animate-spin text-blue-500" />
-            <p className="text-gray-500">Cargando datos financieros...</p>
+          <div className="space-y-5">
+            {/* Skeleton hero */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(56,139,253,0.1)' }}>
+              <div className="px-6 py-4 border-b" style={{ borderColor: 'rgba(56,139,253,0.08)' }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-white/5 animate-pulse" />
+                  <div className="space-y-1.5">
+                    <div className="h-3.5 w-40 bg-white/5 rounded animate-pulse" />
+                    <div className="h-2.5 w-56 bg-white/5 rounded animate-pulse" />
+                  </div>
+                </div>
+              </div>
+              <div className="px-6 py-6 space-y-4">
+                <div className="h-12 w-72 bg-white/5 rounded-lg animate-pulse" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="h-20 bg-white/5 rounded-xl animate-pulse" />
+                  <div className="h-20 bg-white/5 rounded-xl animate-pulse" />
+                </div>
+                <div className="h-52 bg-white/5 rounded-xl animate-pulse" />
+              </div>
+            </div>
+            {/* Skeleton cards row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {[1, 2].map(i => (
+                <div key={i} className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(56,139,253,0.1)' }}>
+                  <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(56,139,253,0.08)' }}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-white/5 animate-pulse" />
+                      <div className="h-3.5 w-32 bg-white/5 rounded animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="px-5 py-5 space-y-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      {[1,2,3].map(j => <div key={j} className="h-16 bg-white/5 rounded-xl animate-pulse" />)}
+                    </div>
+                    <div className="h-48 bg-white/5 rounded-xl animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <>
@@ -1936,6 +2273,22 @@ export default function DashboardPage() {
                 {flujoCaja        && !flujoCaja.error        && <PagosDelMes        data={flujoCaja} />}
                 {pagosProgramados && !pagosProgramados.error && <PagosProgramados   data={pagosProgramados} />}
               </div>
+            )}
+
+            {/* ── PESTAÑA ADMIN (solo ALEX) ── */}
+            {tabActiva === 'admin' && role === 'admin' && (
+              <AdminPanel
+                sheets={sheets}
+                flujoEfectivo={flujoEfectivo}
+                ventasSheets={ventasSheets}
+                estadoResultados={estadoResultados}
+                presupuesto={presupuesto}
+                presupuestoPorAreaData={presupuesto}
+                flujoCaja={flujoCaja}
+                pagosProgramados={pagosProgramados}
+                deudas={deudas}
+                cobranza={cobranza}
+              />
             )}
           </>
         )}
