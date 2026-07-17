@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 
 export async function proxy(req: NextRequest) {
+  if (req.nextUrl.pathname === '/') {
+    return NextResponse.redirect(new URL('/ordenes', req.url))
+  }
+
   const session = await getSession()
   const isLoginPage = req.nextUrl.pathname === '/login'
 
