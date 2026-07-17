@@ -17,5 +17,6 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  // /ordenes tiene su propio login independiente (Google OAuth), no el de sesión del dashboard.
+  matcher: ['/((?!api|ordenes|_next/static|_next/image|favicon.ico).*)'],
 }

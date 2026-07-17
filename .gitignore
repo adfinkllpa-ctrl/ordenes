@@ -1,4 +1,6 @@
 .env
+.env.local
+.env*.local
 service_account.json
 venv/
 __pycache__/
