@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     const adjuntos: Array<{ filename: string; content: Buffer; mimeType: string }> = [
       {
         filename: `Orden_de_Compra_${orden.folio}.pdf`,
-        content: pdfBytes,
+        content: Buffer.from(pdfBytes),
         mimeType: 'application/pdf',
       },
     ]
