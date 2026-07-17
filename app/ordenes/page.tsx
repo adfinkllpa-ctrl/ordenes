@@ -10,6 +10,7 @@ interface Orden {
   montoTotal: number
   estado: 'Pendiente de aprobación' | 'Aprobada' | 'Rechazada' | 'Pagada'
   fechaPago: string | null
+  tipoComprobante: string
   comprobanteSiNo?: 'Sí' | 'No' | ''
   comprobantePago?: string
 }
