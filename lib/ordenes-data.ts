@@ -165,7 +165,7 @@ export interface NuevaOrden {
   terminosPago: string
   lineas: LineaOrden[]
   montoTotal: number
-  comprobanteSiNo?: 'Sí' | 'No' // ¿Adjuntará comprobante?
+  comprobanteSiNo?: 'Sí' | 'No' | '' // ¿Adjuntará comprobante?
 }
 
 export interface Orden extends NuevaOrden {

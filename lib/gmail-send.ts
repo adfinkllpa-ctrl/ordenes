@@ -13,7 +13,7 @@ function encodeMimeMessage(opts: {
   adjuntos?: Adjunto[]
 }): string {
   const subjectEncoded = `=?UTF-8?B?${Buffer.from(opts.subject, 'utf8').toString('base64')}?=`
-  const allAdjuntos = opts.adjuntos ? [opts.adjunto, ...opts.adjuntos].filter(Boolean) : (opts.adjunto ? [opts.adjunto] : [])
+  const allAdjuntos: Adjunto[] = opts.adjuntos ? [opts.adjunto, ...opts.adjuntos].filter((a): a is Adjunto => Boolean(a)) : (opts.adjunto ? [opts.adjunto] : [])
 
   if (allAdjuntos.length === 0) {
     const lines = [
